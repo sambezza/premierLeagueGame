@@ -286,7 +286,7 @@ if st.session_state.fixtures_df is not None:
                             min_value=0,
                             max_value=10,
                             value=default_home,
-                            key=f"pred_home_{idx}_{round_number}",
+                            key=f"pred_home_{player_name}_{idx}_{round_number}",
                             label_visibility="collapsed"
                         )
                     with col3:
@@ -295,7 +295,7 @@ if st.session_state.fixtures_df is not None:
                             min_value=0,
                             max_value=10,
                             value=default_away,
-                            key=f"pred_away_{idx}_{round_number}",
+                            key=f"pred_away_{player_name}_{idx}_{round_number}",
                             label_visibility="collapsed"
                         )
                     with col4:
