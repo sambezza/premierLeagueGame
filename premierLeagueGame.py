@@ -32,23 +32,22 @@ def calculate_points(pred_home, pred_away, actual_home, actual_away):
         pred_away = int(pred_away)
         actual_home = int(actual_home)
         actual_away = int(actual_away)
-
     except (ValueError, TypeError):
-        # If any input cannot be safely converted to an integer (e.g., 'A', None),
-        # return 0 points and stop calculation for this fixture.
         return 0, False, False
-    # Exact score: 3 points
+
+    # Exact score: 5 points (and automatically correct result)
     if pred_home == actual_home and pred_away == actual_away:
-        points += 3
+        points = 5
         exact = True
-
-    # Correct result (win/draw/loss): 1 point
-    pred_result = "draw" if pred_home == pred_away else ("home" if pred_home > pred_away else "away")
-    actual_result = "draw" if actual_home == actual_away else ("home" if actual_home > actual_away else "away")
-
-    if pred_result == actual_result:
-        points += 1
         correct_res = True
+    else:
+        # Correct result (win/draw/loss): 2 points
+        pred_result = "draw" if pred_home == pred_away else ("home" if pred_home > pred_away else "away")
+        actual_result = "draw" if actual_home == actual_away else ("home" if actual_home > actual_away else "away")
+
+        if pred_result == actual_result:
+            points = 2
+            correct_res = True
 
     return points, exact, correct_res
 
@@ -318,8 +317,7 @@ if st.session_state.fixtures_df is not None:
                             )
                             st.info(f"🎯 Your Points: {points}")
 
-            #if st.button("Submit Predictions", type="primary", disabled=locked):
-            if st.button("Submit Predictions", type="primary"):
+            if st.button("Submit Predictions", type="primary", disabled=locked):
                 if player_name not in st.session_state.predictions:
                     st.session_state.predictions[player_name] = {}
 
