@@ -223,17 +223,24 @@ if st.session_state.fixtures_df is not None:
 
         if player_name:
             # Auto-select next round based on today's date
-            today = pd.Timestamp.now().normalize()
-            default_round = available_rounds[0]  # fallback to first round
+            now = pd.Timestamp.now()  # current date & time
+            default_round = available_rounds[0]  # fallback
 
-            for round_num in available_rounds:
+            for i, round_num in enumerate(available_rounds):
                 round_fixtures = get_round_fixtures(fixtures_df, round_num)
-                # Check if any fixture in this round is today or in the future
-                if (round_fixtures['Date'] >= today).any():
-                    default_round = round_num+1
-                    break
 
-            default_index = available_rounds.index(default_round) if default_round in available_rounds else 0
+                if (round_fixtures['Date'] <= now).any():
+                    # At least one fixture has started → show NEXT round if it exists
+                    if i + 1 < len(available_rounds):
+                        default_round = available_rounds[i + 1]
+                    else:
+                        default_round = round_num  # last round, stay on it
+                elif (round_fixtures['Date'] > now).any():
+                    # No fixtures started yet → show this round
+                    default_round = round_num
+                    break  # stop at the first upcoming round
+
+            default_index = available_rounds.index(default_round)
 
             round_number = st.selectbox(
                 "Select Round:",
