@@ -4,7 +4,7 @@ import os
 import openpyxl
 import json
 
-@st.cache_data
+@st.cache_data(ttl=300)
 def load_fixtures(file_path):
     """Load fixtures from Excel file"""
     try:
