@@ -406,7 +406,7 @@ if st.session_state.fixtures_df is not None:
                                 if not fixture.empty:
                                     with st.container(border=True):
                                         fixture = fixture.iloc[0]
-                                        col1, col2 = st.columns([1,1])
+                                        col1, col2 = st.columns([1, 1])
 
                                         with col1:
                                             st.write(f"**{fixture['Home Team']} vs {fixture['Away Team']}**")
@@ -416,17 +416,24 @@ if st.session_state.fixtures_df is not None:
                                                 actual_home = int(fixture['Home Score'])
                                                 actual_away = int(fixture['Away Score'])
                                                 st.write(f"Actual Result: {actual_home} - {actual_away}")
+
                                         with col2:
-                                            points, _, _ = calculate_points(pred['home'], pred['away'],
-                                                                            actual_home, actual_away)
-                                            if points == 4:
-                                                st.success(f"🎯 Perfect! **{points} points**")
-                                            elif points > 0:
-                                                st.info(f"✓ **{points} points**")
+                                            # Only calculate points if the match has been played
+                                            if pd.notna(fixture['Home Score']):
+                                                actual_home = int(fixture['Home Score'])
+                                                actual_away = int(fixture['Away Score'])
+                                                points, _, _ = calculate_points(pred['home'], pred['away'],
+                                                                                actual_home, actual_away)
+                                                if points == 4:
+                                                    st.success(f"🎯 Perfect! **{points} points**")
+                                                elif points > 0:
+                                                    st.info(f"✓ **{points} points**")
+                                                else:
+                                                    st.error("✗ **0 points**")
                                             else:
-                                                st.error("✗ **0 points**")
+                                                st.warning("Match not played yet")
                                 else:
-                                    st.warning("Match not played yet")
+                                    st.warning("Match not found")
 
         else:
             st.info("No predictions submitted yet. Make your predictions in the first tab!")
