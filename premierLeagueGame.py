@@ -186,8 +186,8 @@ def is_round_locked(fixtures_df, round_num):
     return pd.Timestamp.now() >= first_match_time
 
 # Configuration - Update this path to your Excel file
-PREDICTIONS_FILE = "predictions.json"
-FIXTURES_FILE = "premier_league_fixtures.xlsx"  # Change this to your file name/path
+PREDICTIONS_FILE = "/predictions.json"
+FIXTURES_FILE = "/premier_league_fixtures.xlsx"  # Change this to your file name/path
 
 # Initialize session state
 if 'predictions' not in st.session_state:
@@ -364,7 +364,7 @@ if st.session_state.fixtures_df is not None:
             # Display leaderboard
             st.dataframe(
                 leaderboard_df,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True  # Hide the default index, as we have a 'Rank' column
             )
 
