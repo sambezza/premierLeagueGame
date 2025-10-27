@@ -165,7 +165,6 @@ def load_predictions_data():
                         predictions[player][int(round_num)] = {
                             int(k): v for k, v in preds.items()
                         }
-                st.info("📥 Loaded latest predictions from GitHub")
                 return predictions
             else:
                 st.warning(f"⚠️ Could not fetch predictions from GitHub: {r.status_code}")
