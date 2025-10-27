@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import json
 import requests
-from base64 import b64encode
+from base64 import b64encode, b64decode
 
 @st.cache_data(ttl=300)
 def load_fixtures(file_path):
@@ -142,11 +142,40 @@ def update_leaderboard(fixtures_df):
 
 # Function to load predictions outside of Streamlit's state management
 def load_predictions_data():
-    """Load predictions from file for calculations"""
+    """Load predictions from GitHub (if available), otherwise from local file"""
+
+    github_token = st.secrets.get("GITHUB_TOKEN", None)
+    repo = st.secrets.get("GITHUB_REPO", None)
+    github_url = None
+
+    if github_token and repo:
+        github_url = f"https://api.github.com/repos/{repo}/contents/{PREDICTIONS_FILE}"
+
+        try:
+            headers = {"Authorization": f"Bearer {github_token}"}
+            r = requests.get(github_url, headers=headers)
+            if r.status_code == 200:
+                content = r.json()["content"]
+                decoded = json.loads(b64decode(content).decode("utf-8"))
+                # Convert string keys back to integers where needed
+                predictions = {}
+                for player, rounds in decoded.items():
+                    predictions[player] = {}
+                    for round_num, preds in rounds.items():
+                        predictions[player][int(round_num)] = {
+                            int(k): v for k, v in preds.items()
+                        }
+                st.info("📥 Loaded latest predictions from GitHub")
+                return predictions
+            else:
+                st.warning(f"⚠️ Could not fetch predictions from GitHub: {r.status_code}")
+        except Exception as e:
+            st.warning(f"⚠️ GitHub fetch failed: {e}")
+
+    # --- Fallback to local file ---
     if os.path.exists(PREDICTIONS_FILE):
         with open(PREDICTIONS_FILE, 'r') as f:
             json_predictions = json.load(f)
-            # Convert string keys back to integers where needed
             predictions = {}
             for player, rounds in json_predictions.items():
                 predictions[player] = {}
@@ -154,8 +183,11 @@ def load_predictions_data():
                     predictions[player][int(round_num)] = {
                         int(k): v for k, v in preds.items()
                     }
+            st.info("📂 Loaded predictions from local file")
             return predictions
+
     return {}
+
 
 def save_predictions():
     """Save predictions to file and push to GitHub"""
@@ -262,15 +294,6 @@ if st.session_state.fixtures_df is not None:
 
     with tab1:
         st.header("Make Your Predictions")
-
-        # Add this block:
-        with open(PREDICTIONS_FILE, "rb") as f:
-            st.download_button(
-                label="⬇️ Download current predictions.json",
-                data=f,
-                file_name="predictions.json",
-                mime="application/json",
-            )
 
         player_name = st.selectbox("Select your name:", ["Jaaaaaamieeee","Kawazy J","Lil Wheezy","Seagullhead1","Shezza","Stiggsy"], key="player_name")
 
