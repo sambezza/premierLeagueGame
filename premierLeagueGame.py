@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import os
-import openpyxl
 import json
+import requests
+from base64 import b64encode
 
 @st.cache_data(ttl=300)
 def load_fixtures(file_path):
@@ -157,8 +158,9 @@ def load_predictions_data():
     return {}
 
 def save_predictions():
-    """Save predictions to file"""
-    # Convert any non-string keys to strings for JSON compatibility
+    """Save predictions to file and push to GitHub"""
+
+    # Convert predictions for JSON compatibility
     json_predictions = {}
     for player, rounds in st.session_state.predictions.items():
         json_predictions[player] = {}
@@ -167,8 +169,49 @@ def save_predictions():
                 str(k): v for k, v in preds.items()
             }
 
+    # Save locally
     with open(PREDICTIONS_FILE, 'w') as f:
         json.dump(json_predictions, f, indent=2)
+
+    # --- Upload to GitHub ---
+    try:
+        github_token = st.secrets["GITHUB_TOKEN"]
+        repo = st.secrets["GITHUB_REPO"]
+        file_path = "predictions.json"  # path in your repo
+
+        api_url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
+        headers = {
+            "Authorization": f"Bearer {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+
+        # Check if file already exists to get its SHA (required for updates)
+        r = requests.get(api_url, headers=headers)
+        sha = r.json().get("sha") if r.status_code == 200 else None
+
+        # Prepare commit message and data
+        with open(PREDICTIONS_FILE, "rb") as f:
+            content = b64encode(f.read()).decode()
+
+        payload = {
+            "message": "Update predictions.json from Streamlit app",
+            "content": content,
+            "branch": "main"  # or your default branch
+        }
+        if sha:
+            payload["sha"] = sha  # update existing file
+
+        # Push to GitHub
+        r = requests.put(api_url, headers=headers, json=payload)
+
+        if r.status_code in [200, 201]:
+            st.success("✅ predictions.json updated on GitHub successfully!")
+        else:
+            st.warning(f"⚠️ GitHub update failed: {r.status_code} - {r.text}")
+
+    except Exception as e:
+        st.error(f"❌ Error pushing to GitHub: {e}")
+
 
 def is_round_locked(fixtures_df, round_num):
     round_fixtures = get_round_fixtures(fixtures_df, round_num)
