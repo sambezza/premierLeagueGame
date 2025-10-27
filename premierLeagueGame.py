@@ -200,6 +200,7 @@ st.set_page_config(layout="wide")
 st.title("⚽ The Boys Score Prediction Game")
 st.markdown("---")
 
+
 # Load fixtures from file
 if st.session_state.fixtures_df is None:
     if os.path.exists(FIXTURES_FILE):
@@ -218,6 +219,15 @@ if st.session_state.fixtures_df is not None:
 
     with tab1:
         st.header("Make Your Predictions")
+
+        # Add this block:
+        with open(PREDICTIONS_FILE, "rb") as f:
+            st.download_button(
+                label="⬇️ Download current predictions.json",
+                data=f,
+                file_name="predictions.json",
+                mime="application/json",
+            )
 
         player_name = st.selectbox("Select your name:", ["Jaaaaaamieeee","Kawazy J","Lil Wheezy","Seagullhead1","Shezza","Stiggsy"], key="player_name")
 
